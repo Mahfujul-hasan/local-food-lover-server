@@ -65,6 +65,7 @@ async function run(){
         await client.connect();
         const localFoodDb = client.db("local_food_db");
         const localFoodDbCollection = localFoodDb.collection("reviews");
+        const myFavoriteCollection = localFoodDb.collection("my_favorite")
 
 
         await client.db('admin').command({ping: 1});
@@ -123,6 +124,41 @@ async function run(){
             const result= await localFoodDbCollection.deleteOne(query)
             res.send(result)
         })
+
+        // favorite db related API 
+        app.post('/favorite',  async(req, res)=>{
+            const favorite = req.body;
+            const query= {
+                foodName: favorite.foodName,
+                Created_by: favorite.Created_by,
+            }
+
+            const exists = await myFavoriteCollection.findOne(query);
+            if(exists){
+                return res.send({message: "Already added to favorites!"});
+            }
+
+            const result = await myFavoriteCollection.insertOne(favorite);
+            res.send(result)
+        })
+
+        app.get('/favorite', async(req, res)=>{
+            const email = req.query.email;
+            const query = {}
+            if(email){
+                query.favorite_by=email
+            }
+            const result= await myFavoriteCollection.find(query).toArray()
+            res.send(result)
+        })
+
+        app.delete('/favorite/:id', async(req, res)=>{
+            const id = req.params.id;
+            const query={_id: new ObjectId(id)}
+            const result= await myFavoriteCollection.deleteOne(query)
+            res.send(result)
+        })
+
 
         
 
