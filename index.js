@@ -1,48 +1,18 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const admin = require("firebase-admin");
-
-const serviceAccount = require("./local-food-lover-a32fe-firebase-adminsdk-fbsvc-0f3ce261e3.json");
 
 require('dotenv').config();
 const app = express();
 const port = 3000 || process.env.PORT;
 
 
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
-
 // MIDDLEWARE 
 app.use(cors());
 app.use(express.json());
 
-const verifyFirebaseToken = async(req, res, next)=>{
-    const authorization = req.headers.authorization;
-    if(!authorization){
-        return res.status(401).send({message:'Unauthorized access'})
-    }
-    const token = authorization.split(' ')[1];
-    if(!token){
-         return res.status(401).send({message:'Unauthorized access'})
-    }
-    try{
-        const decoded= await admin.auth.verifyFirebaseToken(token);
-        console.log('inside token',decoded);
-        req.token_email = decoded.email;
-        next()
-    }
-    catch(error){
-        return res.status(401).send({message:'Unauthorized access'})
-        
-    }
 
-    // next()
-}
-
-const uri = "mongodb+srv://localFoodLover:Q7KvgOYx0WvIm11k@cluster0.vqc4z0k.mongodb.net/?appName=Cluster0";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vqc4z0k.mongodb.net/?appName=Cluster0`;
 
 
 // localFoodLover: Q7KvgOYx0WvIm11k 
@@ -152,7 +122,7 @@ async function run(){
             res.send(result)
         })
 
-        app.delete('/favorite/:id', async(req, res)=>{
+        app.delete('/favorite/:id',async(req, res)=>{
             const id = req.params.id;
             const query={_id: new ObjectId(id)}
             const result= await myFavoriteCollection.deleteOne(query)
